@@ -3,10 +3,16 @@
 #include <string>
 #include "Polyp.h"
 #include <queue>
+//#import <c:\program files\common files\system\ado\msado15.dll>  
+//
+//rename("EOF", "adoEOF");//把"EOF"定义改为"adoEOF",避免和文件未eof冲突 	
+//上面头文件的请照写,要不就出现很多错误 
+//msado15.dll加载后会在我们c++工程项目里自动产生几个头文件,定义了下面 莫名其妙 的宏 类型 等等 
 using namespace std;
 void seedGrowing(Raw * src,vector<Seed> seedlist);
 void seedGrowing(Raw * src, Raw *origin, vector<Seed> seedlist);
 void seedGrowing(Raw * src, vector<Seed> seedlist, int threshold);
+vector<Seed> seedlistdata(const int size);
 Polyp::Polyp(void)
 {
 }
@@ -202,26 +208,42 @@ Seed * findLeastCostSeed(vector<Seed> list,Seed *center)
 	}
 	return &(list[pos]);
 }
-void Polyp::polypDetect(string dir,string dirthickness,int methodo)
+void Polyp::polypDetect(string dir,string dirthickness,string dirseg,int methodo,int i)
 {
-	int offset = 220;
+	
 	char *pt="single_well";
-	int l=0,m=0,n=0,l1=0,l2=0,iter_outer=50;
+	int l=0,m=0,n=0,l1=0,l2=0,iter_outer=40;
 	RawImage test;
 	char dirhead[200]=input2;  //K:\\sdf\\volume\\clean\\clean\\ep\\
 	
 	char dirheadt[200]=inputt; 
+	char dirheadseg[200] = "D:\\data\\segmention\\polypseg\\";
 	char dirbodyt[100];
+	char dirbodyseg[100];
 	char dirbody[100];
+	//char dirbodyseg[100];
 	strcpy(dirbody,dir.c_str());
 	strcpy(dirbodyt,dirthickness.c_str());
+	strcpy(dirbodyseg, dirseg.c_str());
 	cout <<"dirbody"<<dirbody<<endl;
 	cout <<"dirbody thickness"<<dirbodyt<<endl;
+	cout << "dirbody seg" <<dirbodyseg<<endl;
 	strcat(dirhead,dirbody);
 	strcat(dirheadt,dirbodyt);
+	strcat(dirheadseg, dirbodyseg);
 	cout << "dirhead" << dirhead<< endl;
-	short * indata=test.readStream(dirhead,&l,&m,&n);
+	vector<Seed> list;
+	list = seedlistdata(42);
+	vector<Seed> seedlist;
+	//Seed *seed = new Seed(248, 208, 15);//3036P :145, 379, 25 //248, 208, 15 3033P:peducated:247, 208, 15 sessile1: 246,222,4+63sessile2:248, 204, 18:
+	Seed *seed = new Seed(list[i]); //to be c
+	float rate = 0;
+	test.readStreamseg(dirheadseg, &rate);
+	seed->z = seed->z*rate;
+	int offset = seed->z - 20;
+	short * indata = test.readStreamfseek(dirhead, &l, &m, &n, offset);
 
+	seed->z = 20;
 	
 	unsigned char * thicknessdata=test.readStreamuchar(dirheadt,l,m,n,offset);//3036P 212 3033P 90 3033P peduncated:90 sessile1:70 sessile2:248,204,58:60
 	//PIXTYPE * 
@@ -245,8 +267,7 @@ void Polyp::polypDetect(string dir,string dirthickness,int methodo)
 	//	}
 
 	//}
-	vector<Seed> seedlist;
-	Seed *seed=new Seed(248, 208, 15);//3036P :145, 379, 25 //248, 208, 15 3033P:peducated:247, 208, 15 sessile1: 246,222,4+63sessile2:248, 204, 18:
+
 	seedlist.push_back(*seed);
 	int method=methodo;
 	if (method==1)
@@ -327,7 +348,7 @@ void Polyp::polypDetect(string dir,string dirthickness,int methodo)
 				}
 			}
 		}
-		Seed *seed3 = new Seed(169,367,11);//250,208,12
+		//Seed *seed3 = new Seed(169,367,11);//250,208,12
 		seedlist.clear();
 		//seedlist.push_back(*seed3);
 		//seedGrowing(input,seedlist,0);
@@ -336,10 +357,10 @@ void Polyp::polypDetect(string dir,string dirthickness,int methodo)
 		//seedGrowing(input,seedlist,0);
 		//ls->initialg(*input);
 		seedlist.clear();
-		Seed *seed2 = new Seed(169, 367, 11);//3036P :145, 379, 25 //248, 208, 15 3033P:peducated:247, 208, 15 sessile1: 246,222,4+63sessile2:248, 204, 18://250, 208, 12
-		seedlist.push_back(*seed2);
-		Raw *initialdata = initialRegion(seedlist,5, l, m, n);
-		*initial = ls->minimal_surface(*initialdata, *input, 1.0, 0.1, 1, 1.5, 1, iter_outer, pt);//alfa is the ballon pressure,lambda control the curvature
+		//Seed *seed2 = new Seed(169, 367, 11);//3036P :145, 379, 25 //248, 208, 15 3033P:peducated:247, 208, 15 sessile1: 246,222,4+63sessile2:248, 204, 18://250, 208, 12
+		seedlist.push_back(*seed);
+		Raw *initialdata = initialRegion(seedlist,1, l, m, n);
+		*initial=ls->PolypEnergy(*initialdata, *input, 3.0, 0.1, -1, 1.5, 1, iter_outer, pt);//alfa is the ballon pressure,lambda control the curvature
 		char *outname1="inner5-8_2polypmethod2.raw";
 		char outdir[200]=output;
 		strcat(outdir,dirbody);
@@ -351,6 +372,21 @@ void Polyp::polypDetect(string dir,string dirthickness,int methodo)
 		//		input->putXYZ(i,0);
 		//	}
 		//}
+		for (size_t i = 0; i < initial->getXsize(); i++)
+		{
+			for (size_t j = 0; j < initial->getYsize(); j++)
+			{
+				for (size_t k = 0; k < initial->getZsize(); k++)
+				{
+					if ((i - seed->x)*(i - seed->x) + (j - seed->y)*(j - seed->y) + (k - seed->z)*(k - seed->z) >= 20 * 20)
+						initial->put(i, j, k, 0);
+
+
+				}
+
+			}
+
+		}
 		test.writeImageName(*initial,outdir);
 	}
 	else if (method == 3)//input data: inner data,outer data,no circle data,region growing stop when
@@ -363,6 +399,118 @@ void Polyp::polypDetect(string dir,string dirthickness,int methodo)
 		
 	}
 	delete[] indata;
+
+}
+float computeVolume(Raw *polyp)
+{
+	float volume = 0;
+	for (size_t i = 0; i < polyp->size(); i++)
+	{
+		if (polyp->getXYZ(i) != 0)
+		{
+			volume++;
+		}
+		
+
+	}
+	return volume;
+}
+float computeArea(Raw *polyp)
+{
+	ThreeDim_LevelSet *test = new ThreeDim_LevelSet();
+	test->initialg(*polyp);
+	float area = 0;
+	for (size_t i = 0; i < polyp->size(); i++)
+	{
+		if (polyp->getXYZ(i) != 0)
+		{
+			area++;
+		}
+
+
+	}
+	return area;
+}
+float computeRadius(Raw * polypg)
+{	//min ball contains the set
+	/*
+	1\compute the gravity center
+	2\
+	*/
+	int x = 0;
+	int y = 0;
+	int z = 0;
+	int n = 0;
+	for (size_t i = 0; i < polypg->getXsize(); i++)
+	{
+		for (size_t j = 0; j < polypg->getYsize(); j++)
+		{
+			for (size_t k = 0; k < polypg->getZsize(); k++)
+			{
+				if (polypg->get(i,j,k)!=0)
+				{
+					n++;
+					x += i;
+					y += j;
+					z += k;
+
+
+
+
+
+				}
+
+			}
+
+		}//for j..
+
+	}//for i..
+	x = x / n;
+	y = y / n;
+	z = z / n;
+	bool flag = true;
+	int r = 2;
+	while (flag)
+	{
+		int i = 0;
+		int j = 0;
+		int k = 0;
+		for (size_t i = 0; i < polypg->getXsize() && flag; i++)
+		{
+			for (size_t j = 0; j < polypg->getYsize() && flag; j++)
+			{
+				for (size_t k = 0; k < polypg->getZsize() && flag; k++)
+				{
+					if ((i - x)*(i - x) + (j - y)*(j - y) + (k - z)*(k - z) > r*r)
+					{
+						flag = false;
+
+					}
+
+
+				}
+
+			}
+
+		}//for ..i
+		if (i==polypg->getXsize())
+		{
+
+		}
+
+
+	}//while
+
+
+
+
+
+
+
+
+}
+void Polyp::computePolyp(Raw *polyp)
+{
 
 }
 Seed *findplanepoint(Seed *outerPoint,Seed * centerPoint,int height)
@@ -465,7 +613,7 @@ void seedGrowing(Raw * src,vector<Seed> seedlist)
 		//				src->put(i,j,k,200);
 		//			}
 		//		}
-		//	}
+		//	}									
 		//}
 		int i=start.x;
 		int j=start.y;
@@ -730,3 +878,133 @@ void seedGrowing(Raw * src,Raw *origin, vector<Seed> seedlist)
 
 
 }
+vector<Seed> seedlistdata(const int size)
+{
+	const int mun = size;
+	//data start at 3035P
+	int data[][3] =
+	{
+		386, 267, 187,//3035P sessile
+		110, 263, 198,//3035S sessile
+		164, 373, 209,//3036P Peduncated
+		109, 171, 151,//3036S Peduncated
+		191, 289, 157,//3036 P SESSILE
+		206, 204, 145,//3036 S SESSILE
+		230, 180, 51,//3037P Peduncated
+		247, 371, 63,//3037S Peduncated
+		356, 286, 201,//3038P Annular
+		141, 228, 194,//3038S Annular
+		230, 321, 183,//3039P P
+		288, 225, 166,//3039s p
+		412, 224, 234,//3039P s
+		81, 243, 164,//3039S s
+		206, 237, 72,//3041P P
+		290, 276, 77,//3041S P
+		330, 329, 319,//3042P S
+		354, 167, 309,//3042S S
+		382, 177, 323,	//3042P s
+		153, 255, 325,// 3042S 	 s
+		234, 155, 318,//3042P s
+		156, 283, 327,//3042S s
+		94, 262, 362, //3043P s
+		393, 228, 354,//3043S s
+		337, 219, 294,//3043p S
+		137, 286, 288,//3043s S
+		300, 350, 107,//3044p S
+		195, 196, 102,//3044S s
+		211, 372, 175,//3046P P
+		300, 177, 147,//3046S p
+		397, 204, 218,//3048P p
+		63, 231, 177,//3048s S
+		142, 195, 224,//3052P P
+		414, 255, 216,//3052S P 
+		222, 367, 201,//3070p p
+		273, 231, 212,//3070s p
+		212, 182, 98,//3072P P
+		289, 319, 115,//3072S p
+		301, 235, 116,//3072P P
+		201, 287, 122,//3072S p
+		115, 300, 142,// 3072P p
+		387, 213, 127,//3072S p
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	};
+	vector<Seed> seedlist;
+	for (size_t i = 0; i < size; i++)
+	{
+		seedlist.push_back(Seed(data[i][0], data[i][1], data[i][2]));
+	}
+	return seedlist;
+}
+//void ADO()
+//{
+//	//最好是要把它整理成一个类,要不用起来非常麻烦! 
+//	//头文件必须的加下载ADO COM 
+//
+//		rename("EOF", "adoEOF")//把"EOF"定义改为"adoEOF",避免和文件未eof冲突 
+//		//上面头文件的请照写,要不就出现很多错误 
+//		//msado15.dll加载后会在我们c++工程项目里自动产生几个头文件,定义了下面 莫名其妙 的宏 类型 等等 
+//		inline void sql()
+//	{
+//		CoInitialize(NULL); //初始化com 
+//		_ConnectionPtr m_pConnection = NULL;//数据库连接实例的智能指针 
+//		m_pConnection.CreateInstance(__uuidof(Connection));//创建连接实例 
+//		try
+//		{
+//			//参数 1 数据库驱动程序和路径 2 用户名 3 密码 4 照写还不知道是什么 
+//			m_pConnection->Open("Provider=Microsoft.Jet.OLEDB.4.0;Data Source=C:\\Database1.mdb",
+//				"", "", adModeUnknown);//打开数据库 
+//			//也可使用conn->Open("DSN=TSdata","","",adModeUnknown); 
+//		}
+//		catch (_com_error e)
+//		{
+//			MessageBox(NULL, "数据库连接失败，确认数据库是否在当前路径下", TEXT("显示窗口"), NULL);
+//			return;
+//		}
+//
+//
+//		_RecordsetPtr RecordsetPtr; // 创建数据集： 
+//
+//		try {
+//			_bstr_t st = "select * from table1";//com经常用的内部字符串是sql语句表名table1 查所有字段 
+//			_variant_t   vRecsAffected; //不知道干什么照写,反正是需要的参数 
+//			RecordsetPtr = m_pConnection->Execute(st,             // 利用连接实例和上面2个参数创建数据集： 
+//				&vRecsAffected,
+//				adOptionUnspecified);//照写 
+//		}
+//		catch (_com_error *e)
+//		{
+//			MessageBox(NULL, "创建数据集失败", TEXT("显示窗口"), NULL);
+//
+//		}
+//		while (!RecordsetPtr->GetadoEOF())//数据集的游标如果不是到尾 就执行循环读数据 
+//		{
+//			_variant_t   vR("ID");//设置要读数据的表的字段名称,这里我哪个数据库里是ID 
+//			_variant_t sts = RecordsetPtr->GetCollect(&vR);//取得ID字段的数据 
+//
+//			_bstr_t st1 = (_bstr_t)sts;//把类型转换一下,要不都不肯显示 
+//
+//			_variant_t   vR2("字段1");//同上面这个字段是"字段1" 
+//			_variant_t sts2 = RecordsetPtr->GetCollect(&vR2);
+//			_bstr_t st2 = (_bstr_t)sts2;
+//			MessageBox(NULL, (LPCSTR)st1, TEXT("显示ID"), NULL);
+//			MessageBox(NULL, (LPCSTR)st2, TEXT("显示字段1"), NULL);
+//			RecordsetPtr->MoveNext();//游标移动到下一条记录,准备下次循环 
+//		}
+//		CoUninitialize();//释放com 
+//	}
+//}

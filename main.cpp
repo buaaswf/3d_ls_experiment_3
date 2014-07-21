@@ -208,28 +208,62 @@ void makeGoodData()
 	}
 }
 
+
+//void polypseg()
+//{
+//	string dir2(input2);//D:\swfdata20140420res\polyp\regiongrowingfillnull
+//	string dirthickness(inputt);
+//	vector<string> files2;
+//	vector<string> filesthickness;
+//	GetFileNameFromDir(dir2, files2);
+//	GetFileNameFromDir(dirthickness, filesthickness);
+//
+//	vector<string> ::iterator thicknessiter = filesthickness.begin();
+//	vector<string>::iterator iterFile2;
+//	int i = 0;
+//	for (iterFile2 = files2.begin(); iterFile2 != files2.end(); iterFile2++)
+//	{
+//
+//		i++;
+//		iterFile2->assign(iterFile2->substr(dir2.size() + 1));
+//		thicknessiter->assign(thicknessiter->substr(dirthickness.size() + 1));
+//		cout << *iterFile2 << endl;
+//		Polyp *test = new Polyp();
+//		test->polypDetect(*iterFile2, *thicknessiter, 2,i);
+//		thicknessiter++;
+//	}
+//
+//
+//}
 int main(int argc,char **argv)
 {
 	string dir2(input2);//D:\swfdata20140420res\polyp\regiongrowingfillnull
 	string dirthickness(inputt);
+	string dirseg("D:\\data\\segmention\\polypseg\\");
 	vector<string> files2;
 	vector<string> filesthickness;
+	vector<string> fileseg;
 	GetFileNameFromDir(dir2,files2);
 	GetFileNameFromDir(dirthickness,filesthickness);
-
-	vector<string> ::iterator thicknessiter=filesthickness.begin();
+	GetFileNameFromDir(dirseg, fileseg);
+	//seedlistdata();
+	int cur = 1;
+	vector<string> ::iterator thicknessiter = filesthickness.begin() + cur-1;
+	vector<string> ::iterator segdiriter = fileseg.begin() + cur-1;
 	vector<string>::iterator iterFile2;
-	for ( iterFile2 = files2.begin(); iterFile2 != files2.end(); iterFile2++ )
+	int i = 0;
+	for ( iterFile2 = files2.begin()+cur-1; iterFile2 != files2.end(); iterFile2++ )
 	{
 
 		
 		iterFile2->assign(iterFile2->substr(dir2.size()+1));
 		thicknessiter->assign(thicknessiter->substr(dirthickness.size()+1));
+		segdiriter->assign(segdiriter->substr(dirseg.size() + 1));
 		cout<<*iterFile2 <<endl;
 		Polyp *test=new Polyp();
-		test->polypDetect(*iterFile2,*thicknessiter,2);
-
-	
+		test->polypDetect(*iterFile2, *thicknessiter, *segdiriter, 2, i+cur-1);
+		i++;
+		segdiriter++;
 		thicknessiter++;
 		//ddcircle(*iterFile);
 		//testcolon(argc,*iterFile2);

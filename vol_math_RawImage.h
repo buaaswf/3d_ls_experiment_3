@@ -36,6 +36,8 @@ public:
 	void readImagesi(short  * buf,char const *file ,int size);
 	PIXTYPE * readStream(char const *file,int *l,int *m,int * n,int datatype);
 	short * readStream(char const *file, int *l, int *m, int * n);
+	short * readStreamfseek(char const *filename, int *l, int * m, int  * n, int z);
+	void  * readStreamseg(char const *filename, float *rate);
 	float * readStreamfloat(char const *filename,int *l,int * m,int  * n);
 	void writeImagecolon(Raw& destImg);
 	void writeImage(Raw& destImg);

@@ -353,7 +353,31 @@ void ThreeDim_LevelSet::outerwall(Raw &phi,Raw &g,double lambda,double mu,double
 	}
 
 }
+Raw ThreeDim_LevelSet::PolypEnergy(Raw &phi, Raw &g, double lambda, double mu, double alfa, float epsilon, int timestep, int iter, char *potentialFunction)
+{
 
+	//this->initialg(g);
+	//Raw pull = outwallpull(phi);
+	//this->initialg(pull);
+	for (int i = 0; i < 2; i++)
+	{
+		//if (i<1)
+		//{
+		//	phi = this->minimal_surface(phi,pull+g,lambda,mu,2*alfa,epsilon,timestep,10,potentialFunction)+\
+				//		this->minimal_surface(phi,g,lambda,mu,-alfa,epsilon,timestep,1,potentialFunction);
+
+		//}
+		//else 
+		phi = this->minimal_surface(phi, g, 5.0, 0.1, -1, 1.5, 1, 20, potentialFunction);// +\
+				//this->minimal_surface(phi,g,1,mu,-alfa,epsilon,timestep,1,potentialFunction);
+
+
+		//this->minimal_surface(phi,g,lambda,mu,1,epsilon,timestep,1,potentialFunction);//change 2*phi to phi -alfa to 1
+		cout << "outer wall iter = " << i << endl;
+	}
+	return phi;
+
+}
 void ThreeDim_LevelSet::outerwallauto(Raw &phi,Raw &g,double lambda,double mu,double alfa,float epsilon,int timestep,int iter,char *potentialFunction)
 {
 
