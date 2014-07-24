@@ -7,6 +7,7 @@ using namespace std;
 //PIXTYPE *p;
 //PIXTYPE	*q;
 //int i,j,k;
+extern Raw gradientxgc(Raw &g);
 Raw del2( Raw &phi ) 
 {
 	int m=phi.getXsize();
@@ -37,7 +38,7 @@ Raw del2( Raw &phi )
 	return ret2.set_shared(true);
 }
 
-Raw gradientxgc( Raw &g ) 
+extern Raw gradientxgc( Raw &g ) 
 {
 	int n=g.getXsize();
 	int m=g.getYsize();
@@ -69,7 +70,7 @@ Raw gradientxgc( Raw &g )
 	return ret.set_shared(true);
 }
 
-Raw gradientygc( Raw & g ) 
+extern Raw gradientygc( Raw & g ) 
 {
 	int n=g.getXsize();
 	int m=g.getYsize();
@@ -97,7 +98,7 @@ Raw gradientygc( Raw & g )
 	return ret.set_shared(true);
 	
 }
-Raw  gradientzgc( Raw &g ) 
+extern Raw  gradientzgc( Raw &g ) 
 {
 	int n=g.getXsize();
 	int m=g.getYsize();
@@ -127,11 +128,11 @@ Raw  gradientzgc( Raw &g )
 Raw cos(Raw &x)
 {
 	Raw ret(x);
-	for (int i=0;i<x.getXsize();i++)
+	for (int i=0; i < x.getXsize();i++)
 	{
-		for (int j=0;j< x.getYsize();j++)
+		for (int j=0; j < x.getYsize();j++)
 		{
-			for (int k=0;k< x.getZsize();k++)
+			for (int k=0; k < x.getZsize();k++)
 			{
 				ret.put(i,j,k,cos((double)x.get(i,j,k)));
 			}
@@ -139,7 +140,7 @@ Raw cos(Raw &x)
 	}
 	return ret.set_shared(true);
 }
-Raw div(Raw &x,Raw &y,Raw &z)
+extern Raw div(Raw &x,Raw &y,Raw &z)
 {
 	return (gradientxgc(x) += gradientygc(y) += gradientzgc(z)).set_shared(true);
 }
@@ -359,7 +360,7 @@ Raw ThreeDim_LevelSet::PolypEnergy(Raw &phi, Raw &g, double lambda, double mu, d
 	//this->initialg(g);
 	//Raw pull = outwallpull(phi);
 	//this->initialg(pull);
-	for (int i = 0; i < 2; i++)
+	for (int i = 0; i < 2; i++)					  //2*20
 	{
 		//if (i<1)
 		//{

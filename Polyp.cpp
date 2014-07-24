@@ -1,7 +1,11 @@
+#pragma once
+#ifndef  SWF_POLYP_H
+#define	 SWF_POLYP_H
 #include <iostream>
 #include <fstream>
 #include <string>
 #include "Polyp.h"
+//#include"ThreeDim_LevelSet.cpp"
 #include <queue>
 //#import <c:\program files\common files\system\ado\msado15.dll>  
 //
@@ -20,6 +24,97 @@ Polyp::Polyp(void)
 
 Polyp::~Polyp(void)
 {
+}
+
+Raw gradientxgc2(Raw &g)
+{
+	int n = g.getXsize();
+	int m = g.getYsize();
+	int l = g.getZsize();
+	Raw ret(g);
+	int i, j, k, temp1, temp2;
+	for (i = 0; i<n; i++)
+	{
+		for (j = 0; j<m; j++)
+		{
+			for (k = 0; k < l; k++)
+			{
+				if (i>0)
+					temp1 = i - 1;
+				else
+					temp1 = 0;
+				if (i<n - 1)
+					temp2 = i + 1;
+				else
+					temp2 = n - 1;
+				ret.put(i, j, k, (g.get(temp2, j, k) - g.get(temp1, j, k)) / 2.0);
+				//if (ret.get(i,j,k)!=0)
+				//{
+				//	cout<<"i="<<i<<",j="<<j<<",k="<<k<<ret.get(i,j,k)<<endl;
+				//}
+			}
+		}
+	}
+	return ret.set_shared(true);
+}
+Raw gradientygc2(Raw & g)
+{
+	int n = g.getXsize();
+	int m = g.getYsize();
+	int l = g.getZsize();
+	Raw ret(n, m, l);
+	int i, j, k, temp1, temp2;
+	for (i = 0; i<n; i++)
+	{
+		for (j = 0; j<m; j++)
+		{
+			for (k = 0; k < l; k++)
+			{
+				if (j>0)
+					temp1 = j - 1;
+				else
+					temp1 = 0;
+				if (j<n - 1)
+					temp2 = j + 1;
+				else
+					temp2 = m - 1;
+				ret.put(i, j, k, 0.5*(g.get(i, temp2, k) - g.get(i, temp1, k)));
+			}
+		}
+	}
+	return ret.set_shared(true);
+
+}
+Raw  gradientzgc2(Raw &g)
+{
+	int n = g.getXsize();
+	int m = g.getYsize();
+	int l = g.getZsize();
+	Raw ret(n, m, l);
+	int i, j, k, temp1, temp2;
+	for (i = 0; i<n; i++)
+	{
+		for (j = 0; j<m; j++)
+		{
+			for (k = 0; k < l; k++)
+			{
+				if (k>0)
+					temp1 = k - 1;
+				else
+					temp1 = 0;
+				if (k<l - 1)
+					temp2 = k + 1;
+				else
+					temp2 = l - 1;
+				ret.put(i, j, k, 0.5*(g.get(i, j, temp2) - g.get(i, j, temp1)));
+			}
+		}
+	}
+	return ret.set_shared(true);
+}
+Raw div2(Raw &x, Raw &y, Raw &z)
+{
+	return (gradientxgc2(x) += gradientygc2(y) += gradientzgc2(z)).set_shared(true);
 }
 int CountLines(char *filename)
 {
@@ -212,7 +307,7 @@ void Polyp::polypDetect(string dir,string dirthickness,string dirseg,int methodo
 {
 	
 	char *pt="single_well";
-	int l=0,m=0,n=0,l1=0,l2=0,iter_outer=40;
+	int l=0,m=0,n=0,l1=0,l2=0,iter_outer=50;
 	RawImage test;
 	char dirhead[200]=input2;  //K:\\sdf\\volume\\clean\\clean\\ep\\
 	
@@ -360,11 +455,11 @@ void Polyp::polypDetect(string dir,string dirthickness,string dirseg,int methodo
 		//Seed *seed2 = new Seed(169, 367, 11);//3036P :145, 379, 25 //248, 208, 15 3033P:peducated:247, 208, 15 sessile1: 246,222,4+63sessile2:248, 204, 18://250, 208, 12
 		seedlist.push_back(*seed);
 		Raw *initialdata = initialRegion(seedlist,1, l, m, n);
-		*initial=ls->PolypEnergy(*initialdata, *input, 3.0, 0.1, -1, 1.5, 1, iter_outer, pt);//alfa is the ballon pressure,lambda control the curvature
+		*initial=ls->minimal_surface(*initialdata, *input, 3.0, 0.1, -1, 1.5, 1, iter_outer, pt);//alfa is the ballon pressure,lambda control the curvature
 		char *outname1="inner5-8_2polypmethod2.raw";
 		char outdir[200]=output;
-		strcat(outdir,dirbody);
-		strcat(outdir,outname1);
+		strcat(dirbody, outname1);
+		strcat(outdir, dirbody);
 		//for (int i=0;i<input->size();i++)
 		//{
 		//	if (input->getXYZ(i)!=200)
@@ -388,10 +483,137 @@ void Polyp::polypDetect(string dir,string dirthickness,string dirseg,int methodo
 
 		}
 		test.writeImageName(*initial,outdir);
+		for (int i = 0; i<initial->getXsize(); i++)
+		{
+			for (int j = 0; j<initial->getYsize(); j++)
+			{
+				for (int k = 0; k<initial->getZsize(); k++)
+				{
+					PIXTYPE val = initial->get(i, j, k);
+					//if (((k-256)*(k-256)+(j-256)*(j-256) )<(230*230))//k<409 && k> 107 && j>156 &&j <390
+					//{
+					if (val <-3)
+					{
+						initial->put(i,j,k,100);
+						//val = 100;  //change to 100 for roc computing *val=0; 
+
+					}
+					else  initial->put(i, j, k, 0);
+						//						val = 0; ////change to 0 for roc computing *val=100; 
+					//}
+					//else *val = 0;
+				}
+			}
+		}
+		computePolyp(initial,dirbody);
 	}
 	else if (method == 3)//input data: inner data,outer data,no circle data,region growing stop when
 	{
+		for (int i = 0; i < l*m*n; i++)
+		{
+			inputo[i] = (float)thicknessdata[i];
+		}
+		PIXTYPE *origin = new PIXTYPE[l*m*(n + offset)];
+		for (int j = 0; j < l*m*(n + offset); j++)
+		{
+			origin[j] = (float)indata[j];
+		}
 
+		Raw *origindata = new Raw(l, m, offset + n, origin);
+		//delete[] thicknessdata;
+		Raw *input = new Raw(l, m, n, inputo);
+		/*Filter *f=new Filter();*/
+		//input=f->guass3DFilter(input,3);
+		RawImage *write = new RawImage();
+		ThreeDim_LevelSet *ls = new ThreeDim_LevelSet();
+		//20140405 delete because of the existance of 
+		ls->initialg(*input);
+		//seedGrowing(input, seedlist);//fisrt time delete the 
+		for (int i = 0; i<input->getXsize(); i++)
+		{
+			for (int j = 0; j<input->getYsize(); j++)
+			{
+				for (int k = 0; k<input->getZsize(); k++)
+				{
+					PIXTYPE val = input->get(i, j, k);
+					//if (((k-256)*(k-256)+(j-256)*(j-256) )<(230*230))//k<409 && k> 107 && j>156 &&j <390
+					//{
+					if (val != 1)
+					{
+						val = 200;  //change to 100 for roc computing *val=0; 
+
+
+					}
+					else val = 0; ////change to 0 for roc computing *val=100; 
+					input->put(i, j, k, val);
+					//}
+					//else *val = 0;
+				}
+			}
+		}
+		//Seed *seed3 = new Seed(169,367,11);//250,208,12
+		seedlist.clear();
+		//seedlist.push_back(*seed3);
+		//seedGrowing(input,seedlist,0);
+		//Seed *seed = new Seed(248, 209, 18);//3036P :145, 379, 25 //248, 208, 15 3033P:peducated:247, 208, 15 sessile1: 246,222,4+63sessile2:248, 204, 18:
+		//seedlist.push_back(*seed);
+		//seedGrowing(input,seedlist,0);
+		//ls->initialg(*input);
+		seedlist.clear();
+		//Seed *seed2 = new Seed(169, 367, 11);//3036P :145, 379, 25 //248, 208, 15 3033P:peducated:247, 208, 15 sessile1: 246,222,4+63sessile2:248, 204, 18://250, 208, 12
+		seedlist.push_back(*seed);
+		Raw *initialdata = initialRegion(seedlist, 2, l, m, n);
+		*initial = ls->minimal_surface(*initialdata, *input, 3.0, 0.1, -1, 1.5, 1, iter_outer, pt);//alfa is the ballon pressure,lambda control the curvature
+		char *outname1 = "inner5-8_2polypmethod2.raw";
+		char outdir[200] = output;
+		strcat(dirbody, outname1);
+		strcat(outdir, dirbody);
+		//for (int i=0;i<input->size();i++)
+		//{
+		//	if (input->getXYZ(i)!=200)
+		//	{
+		//		input->putXYZ(i,0);
+		//	}
+		//}
+		for (size_t i = 0; i < initial->getXsize(); i++)
+		{
+			for (size_t j = 0; j < initial->getYsize(); j++)
+			{
+				for (size_t k = 0; k < initial->getZsize(); k++)
+				{
+					if ((i - seed->x)*(i - seed->x) + (j - seed->y)*(j - seed->y) + (k - seed->z)*(k - seed->z) >= 20 * 20)
+						initial->put(i, j, k, 0);
+
+
+				}
+
+			}
+
+		}
+		test.writeImageName(*initial, outdir);
+		for (int i = 0; i<initial->getXsize(); i++)
+		{
+			for (int j = 0; j<initial->getYsize(); j++)
+			{
+				for (int k = 0; k<initial->getZsize(); k++)
+				{
+					PIXTYPE val = initial->get(i, j, k);
+					//if (((k-256)*(k-256)+(j-256)*(j-256) )<(230*230))//k<409 && k> 107 && j>156 &&j <390
+					//{
+					if (val <0)
+					{
+						initial->put(i, j, k, 100);
+						//val = 100;  //change to 100 for roc computing *val=0; 
+
+					}
+					else  initial->put(i, j, k, 0);
+					//						val = 0; ////change to 0 for roc computing *val=100; 
+					//}
+					//else *val = 0;
+				}
+			}
+		}
+		computePolyp(initial, dirbody);
 
 		
 
@@ -422,7 +644,7 @@ float computeArea(Raw *polyp)
 	float area = 0;
 	for (size_t i = 0; i < polyp->size(); i++)
 	{
-		if (polyp->getXYZ(i) != 0)
+		if (polyp->getXYZ(i) !=1)
 		{
 			area++;
 		}
@@ -441,19 +663,24 @@ float computeRadius(Raw * polypg)
 	int y = 0;
 	int z = 0;
 	int n = 0;
+	vector<Seed> list;
+	//compute the gravity center
 	for (size_t i = 0; i < polypg->getXsize(); i++)
 	{
 		for (size_t j = 0; j < polypg->getYsize(); j++)
 		{
 			for (size_t k = 0; k < polypg->getZsize(); k++)
 			{
-				if (polypg->get(i,j,k)!=0)
+				PIXTYPE val = polypg->get(i, j, k);
+				if (val!=0)
 				{
+					
 					n++;
 					x += i;
 					y += j;
 					z += k;
-
+					Seed *seed = new Seed(i,j,k);
+					list.push_back(*seed);
 
 
 
@@ -469,48 +696,98 @@ float computeRadius(Raw * polypg)
 	y = y / n;
 	z = z / n;
 	bool flag = true;
-	int r = 2;
-	while (flag)
+	int r = 0;
+	for (size_t i = 0; i < list.size(); i++)
 	{
-		int i = 0;
-		int j = 0;
-		int k = 0;
-		for (size_t i = 0; i < polypg->getXsize() && flag; i++)
-		{
-			for (size_t j = 0; j < polypg->getYsize() && flag; j++)
-			{
-				for (size_t k = 0; k < polypg->getZsize() && flag; k++)
-				{
-					if ((i - x)*(i - x) + (j - y)*(j - y) + (k - z)*(k - z) > r*r)
-					{
-						flag = false;
+		int dist = (list[i].x - x)*(list[i].x - x) + (list[i].y - y)*(list[i].y - y) + (list[i].z - z)*(list[i].z - z);
+		r*r < dist ? r = sqrt(dist) : r = r;
 
-					}
+	}
+	//int r = 2;
+	//int i = 0;
+	//int j = 0;
+	//int k = 0;
 
-
-				}
-
-			}
-
-		}//for ..i
-		if (i==polypg->getXsize())
-		{
-
-		}
-
-
-	}//while
+	//while (i <polypg->getXsize() && j < polypg->getYsize() && k < polypg->getZsize())
+	//{
+	//	flag = true;
+	//	for (size_t i = 0; i < polypg->getXsize() && flag; i++)
+	//	{
+	//		for (size_t j = 0; j < polypg->getYsize() && flag; j++)
+	//		{
+	//			for (size_t k = 0; k < polypg->getZsize() && flag; k++)
+	//			{
+	//				PIXTYPE val = polypg->get(i, j, k) ;
+	//				if ( val !=0  )
+	//				{
+	//					if ((i - x)*(i - x) + (j - y)*(j - y) + (k - z)*(k - z) > r*r)
+	//					{
+	//						flag = false;
+	//						break;
 
 
+	//					}
+
+	//				}
 
 
+	//			}
 
+	//		}
 
+	//	}//for ..i
 
+	//	if (i == polypg->getXsize() && j == polypg->getYsize() && k == polypg->getZsize())
+	//	{
+	//		break;
 
+	//	}
+	//	else r++;
+
+	//}//while
+
+	return r;
 }
-void Polyp::computePolyp(Raw *polyp)
+Raw *computeCurvature(Raw *g)
 {
+	//ThreeDim_LevelSet *test = new ThreeDim_LevelSet();
+	//test->initialg(*g);
+	Raw vx = gradientxgc2(*g);
+	Raw vy = gradientygc2(*g);
+	Raw vz = gradientzgc2(*g);
+	Raw *res=new Raw((div2(vx, vy, vz)));
+	//for (size_t i = 0; i < res->size(); i++)
+	//{
+	//	if (res->getXYZ(i)!=0)
+	//	{
+	//		cout << res->getXYZ(i) << endl;
+
+	//	}
+
+	//}
+	return res;
+}
+void Polyp::computePolyp(Raw *polyp,char *dir)
+{	 
+	ofstream os("E:\\statistics\\res_area_volume_r.txt",ios::app);	
+	float b = computeVolume(polyp);
+	cout << b << endl;;
+	os << b << " ";					 
+	float c = computeRadius(polyp);
+	os << c << " ";
+	cout << c << endl;
+	Raw *area = new Raw(*polyp);
+	float a = computeArea(area);
+	os<<a<<" ";
+	cout << a << endl;
+	RawImage*test=NULL;
+	char curvaturedir[100] = "E:\\statistics\\";
+	strcat(curvaturedir, dir);
+	Raw *res = computeCurvature(polyp);
+	test->writeImageNamev2(*res, curvaturedir);
+
+	os << endl;
+
 
 }
 Seed *findplanepoint(Seed *outerPoint,Seed * centerPoint,int height)
@@ -1008,3 +1285,4 @@ vector<Seed> seedlistdata(const int size)
 //		CoUninitialize();// Õ∑≈com 
 //	}
 //}
+#endif

@@ -41,7 +41,7 @@ public:
 	float * readStreamfloat(char const *filename,int *l,int * m,int  * n);
 	void writeImagecolon(Raw& destImg);
 	void writeImage(Raw& destImg);
-
+	void writeImageNamev2(Raw &destImg, char *name);
 	void writeImagesesmic(Raw &destImg);
 	void writeImageName(Raw &destImg, char *name);
 	void readImage2(float * buf,char const *file ,int size);

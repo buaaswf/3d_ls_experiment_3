@@ -44,7 +44,7 @@ public:
 		 */
 
 		void polypDetect(string dir,string dirthickness,string dirseg,int method,int i);
-		void computePolyp(Raw *polyp);
+		void computePolyp(Raw *polyp,char* dir);
 
 };
 

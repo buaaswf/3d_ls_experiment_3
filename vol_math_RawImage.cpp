@@ -382,6 +382,39 @@ void RawImage::writeImageName(Raw &destImg, char *name)
 	delete[] data;
 	printf("write is ok");
 }
+void RawImage::writeImageNamev2(Raw &destImg, char *name)
+{
+	FILE *p = fopen(name, "wb");
+	PIXTYPE *data = new PIXTYPE[destImg.size()];
+	memcpy(data, destImg.getdata(), sizeof(PIXTYPE)*destImg.size());
+
+	//for (int i = 0; i<destImg.getZsize(); i++)
+	//{
+	//	for (int j = 0; j<destImg.getYsize(); j++)
+	//	{
+	//		for (int k = 0; k<destImg.getXsize(); k++)
+	//		{
+	//			PIXTYPE *val = &data[i*destImg.getXsize()*destImg.getYsize() + j*destImg.getXsize() + k];
+	//			//if (((k-256)*(k-256)+(j-256)*(j-256) )<(230*230))//k<409 && k> 107 && j>156 &&j <390
+	//			//{
+	//			if (*val <-3)
+	//			{
+	//				*val = 100;  //change to 100 for roc computing *val=0; 
+
+	//			}
+	//			else *val = 0; ////change to 0 for roc computing *val=100; 
+	//			//}
+	//			//else *val = 0;
+	//		}
+	//	}
+	//}
+	fwrite(data, sizeof(PIXTYPE), destImg.size(), p);
+	fclose(p);
+	fflush(stdout);
+
+	delete[] data;
+	printf("write is ok");
+}
 void RawImage::writeImagesesmic(Raw &destImg)
 {
 	FILE *p=fopen("F:\\3Dlevel.raw","wb");

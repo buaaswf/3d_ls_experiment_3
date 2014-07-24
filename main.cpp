@@ -261,6 +261,7 @@ int main(int argc,char **argv)
 		segdiriter->assign(segdiriter->substr(dirseg.size() + 1));
 		cout<<*iterFile2 <<endl;
 		Polyp *test=new Polyp();
+
 		test->polypDetect(*iterFile2, *thicknessiter, *segdiriter, 2, i+cur-1);
 		i++;
 		segdiriter++;
