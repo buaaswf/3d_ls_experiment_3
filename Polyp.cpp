@@ -171,7 +171,7 @@ vector<Seed> readSeedFromTXT(char *txtfilepath)
 		return seed;
 
 }
-Raw* Polyp::initialRegion(vector<Seed> seedlist,int size,int l, int m, int n)
+Raw* Polyp::initialRegion(vector<Seed> seedlist,Raw *input,int size,int l, int m, int n)
 {
 	Raw *initialRegion=new Raw(l,m,n);
 	//memset(initialRegion->getdata(),2,initialRegion->size());
@@ -189,7 +189,12 @@ Raw* Polyp::initialRegion(vector<Seed> seedlist,int size,int l, int m, int n)
 			{
 				for (int k = it->z - size; k< it->z + size; ++k)
 				{
-					initialRegion->put(i,j,k,2);
+					if (input->get(i,j,k)!=0)
+					{
+						initialRegion->put(i, j, k, 2);
+
+					}
+					
 				}
 				
 			}
@@ -247,7 +252,7 @@ void Polyp::polypDetect(string dir)
 	vector<Seed> seedlist;
 	Seed *seed=new Seed(164, 373, 20);
 	seedlist.push_back(*seed);
-	Raw *initialdata=initialRegion(seedlist,20,l,m,n);
+	Raw *initialdata=initialRegion(seedlist,input,20,l,m,n);
 	*initial=ls->minimal_surface(*initialdata,*input,5.0,0.1,3,1.5,1,iter_outer,pt);
 	char *outname1="inner5-8_2.raw";
 	char outdir[200]=output;
@@ -307,7 +312,7 @@ void Polyp::polypDetect(string dir,string dirthickness,string dirseg,int methodo
 {
 	
 	char *pt="single_well";
-	int l=0,m=0,n=0,l1=0,l2=0,iter_outer=50;
+	int l=0,m=0,n=0,l1=0,l2=0,iter_outer=40;
 	RawImage test;
 	char dirhead[200]=input2;  //K:\\sdf\\volume\\clean\\clean\\ep\\
 	
@@ -378,8 +383,9 @@ void Polyp::polypDetect(string dir,string dirthickness,string dirseg,int methodo
 		RawImage *write = new RawImage();
 		ThreeDim_LevelSet *ls = new ThreeDim_LevelSet();
 		//20140405 delete because of the existance of 
-		ls->initialg(*input);
-	Raw *initialdata=initialRegion(seedlist,2,l,m,n);
+		
+	Raw *initialdata=initialRegion(seedlist,input,1,l,m,n);
+	ls->initialg(*input);
 	*initial=ls->minimal_surface(*initialdata,*input,2*5.0,0.1,-3,1.5,1,iter_outer,pt);
 	char *outname1="inner5-8_2.raw";
 	char outdir[200]=output;
@@ -454,8 +460,10 @@ void Polyp::polypDetect(string dir,string dirthickness,string dirseg,int methodo
 		seedlist.clear();
 		//Seed *seed2 = new Seed(169, 367, 11);//3036P :145, 379, 25 //248, 208, 15 3033P:peducated:247, 208, 15 sessile1: 246,222,4+63sessile2:248, 204, 18://250, 208, 12
 		seedlist.push_back(*seed);
-		Raw *initialdata = initialRegion(seedlist,1, l, m, n);
-		*initial=ls->minimal_surface(*initialdata, *input, 3.0, 0.1, -1, 1.5, 1, iter_outer, pt);//alfa is the ballon pressure,lambda control the curvature
+		
+		Raw *initialdata = initialRegion(seedlist, input, 1, l, m, n);	 
+		//ls->initialg(*input);
+		*initial=ls->minimal_surface(*initialdata, *input, 1.0, 0.15, -1, 1.5, 1, iter_outer, pt);//alfa is the ballon pressure,lambda control the curvature
 		char *outname1="inner5-8_2polypmethod2.raw";
 		char outdir[200]=output;
 		strcat(dirbody, outname1);
@@ -473,7 +481,7 @@ void Polyp::polypDetect(string dir,string dirthickness,string dirseg,int methodo
 			{
 				for (size_t k = 0; k < initial->getZsize(); k++)
 				{
-					if ((i - seed->x)*(i - seed->x) + (j - seed->y)*(j - seed->y) + (k - seed->z)*(k - seed->z) >= 20 * 20)
+					if ((i - seed->x)*(i - seed->x) + (j - seed->y)*(j - seed->y) + (k - seed->z)*(k - seed->z) >= 30 * 30)
 						initial->put(i, j, k, 0);
 
 
@@ -482,7 +490,7 @@ void Polyp::polypDetect(string dir,string dirthickness,string dirseg,int methodo
 			}
 
 		}
-		test.writeImageName(*initial,outdir);
+		test.writeImageNamev2(*initial,outdir);
 		for (int i = 0; i<initial->getXsize(); i++)
 		{
 			for (int j = 0; j<initial->getYsize(); j++)
@@ -562,7 +570,7 @@ void Polyp::polypDetect(string dir,string dirthickness,string dirseg,int methodo
 		seedlist.clear();
 		//Seed *seed2 = new Seed(169, 367, 11);//3036P :145, 379, 25 //248, 208, 15 3033P:peducated:247, 208, 15 sessile1: 246,222,4+63sessile2:248, 204, 18://250, 208, 12
 		seedlist.push_back(*seed);
-		Raw *initialdata = initialRegion(seedlist, 2, l, m, n);
+		Raw *initialdata = initialRegion(seedlist,input,2, l, m, n);
 		*initial = ls->minimal_surface(*initialdata, *input, 3.0, 0.1, -1, 1.5, 1, iter_outer, pt);//alfa is the ballon pressure,lambda control the curvature
 		char *outname1 = "inner5-8_2polypmethod2.raw";
 		char outdir[200] = output;

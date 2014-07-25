@@ -30,7 +30,7 @@ public:
 		Polyp(void);
 		~Polyp(void);
 		vector<Seed> readSeedFromTXT(char *txtfilepath);
-		Raw* initialRegion(vector<Seed> seedlist,int size,int l, int m, int n);
+		Raw* initialRegion(vector<Seed> seedlist,Raw *input,int size,int l, int m, int n);
 		void polypDetect(string dir);
 
 		/**

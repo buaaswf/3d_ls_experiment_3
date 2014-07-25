@@ -124,7 +124,7 @@ short * RawImage::readStream(char const *filename, int *l, int * m, int  * n)
 	int size = lx*ly*lz*sizeof(short);
 	*l = lx; *m = ly; *n = lz;
 	short *buf = new short[size];
-	file.seekg(24L + *l**m*(212 - 20), ios::beg);//+512*512*345*sizeof(short)
+	//file.seekg(24L + *l**m*(212 - 20), ios::beg);//+512*512*345*sizeof(short)
 	file.read((char *)buf, size);
 	file.close();
 	return buf;
@@ -146,10 +146,12 @@ short * RawImage::readStreamfseek(char const *filename, int *l, int * m, int  * 
 	file.read(reinterpret_cast<char *>(&lz), sizeof(int));
 	file.read(reinterpret_cast<char *>(&rate), sizeof(float));
 	cout << rate << endl;
+	//lz = 50;
 	int size = lx*ly*lz*sizeof(short);
 	*l = lx; *m = ly; *n = lz;
+	
 	short *buf = new short[size];
-	file.seekg(24L + *l**m*(z - 20), ios::beg);//+512*512*345*sizeof(short)
+	file.seekg(24L + *l**m*(z)*sizeof(short), ios::beg);//+512*512*345*sizeof(short)
 	file.read((char *)buf, size);
 	file.close();
 	return buf;
@@ -198,7 +200,7 @@ unsigned char * RawImage::readStreamuchar(char const *filename,int l,int m,int  
 	//cout<<rate<<endl;
 	int size=l*m*n*sizeof(unsigned char);
 	unsigned char *buf=new unsigned char [size];
-	file.seekg(l*m*(seedz-20)+0L,ios::beg);//+512*512*345*sizeof(short)
+	file.seekg(l*m*(seedz)*sizeof(unsigned char)+0L,ios::beg);//+512*512*345*sizeof(short)
 	file.read((char *)buf,size);
 	file.close();
 	return buf;
