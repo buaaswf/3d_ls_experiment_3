@@ -297,6 +297,8 @@ Raw ThreeDim_LevelSet::minimal_surface(Raw &phi,Raw &g,double lambda,double mu,d
 		phi += (distRegTerm)*mu*((double)timestep);
 		phi += phi_x;
 		cout<<"iterator i="<<i<<endl;
+		RawImage *test=new RawImage();
+		//test->writeImageNamev2(phi, "phi.raw");
 	}	
 	return phi;
 }

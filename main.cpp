@@ -1,11 +1,113 @@
 
 #include "vol_math_LevelSet.h"
-#include "statistics.h"
+//#include "statistics.h"
 #include "test.h"
 #include "ProcessDirty.h"
 #include "DeleteMiddle.h"
 #include"Polyp.h"
 #include"GoodData.h"
+#include"Filter.h"
+#ifdef _WIN32
+#include <Windows.h>
+#include <strsafe.h>
+#else
+#include <dirent.h>
+#endif
+#define output "D:\\swfdata20140420res\\polyp\\" 
+//#define  input2 "D:\\data\\clean\\polypseginputdata\\origin\\"
+//#define output "K:\\20140404\\" 
+//#define input1  "L:\\sdfdata2\\edt\\20140409edt\\"	//thickness uint8	//edt		//float
+////swf 20140409 delete for float2char
+//#define input2  "K:\\sdf\\volume\\clean\\clean\\ep\\20140410\\"//short
+////#define input2 "K:\\20140404\\inner\\"
+//#define input3  "K:\\skeleton\\"  //skeleton uint8 //unsigned char
+//#define input1  "F:\\data\\skeleton-edt\\"				//float
+//#define input2	"E:\\volume\\skeletono\\"		//short
+//#define input3 "F:\\data\\skeleton-s\\"   //unsigned char
+//#define input1 "L:\\sdfdata2\\edt\\20140414edt\\"
+
+//#define input1 "D:\\swfdata20140420res\\auto\\outer\\"//GAC levelset data
+//# define input1 "L:\\sdfdata2\\inner\\"
+//#define input2 "E:\\volume\\segmention\\rate\\"
+//# define input2 "F:\\data\\dirty\\bone\\"K:\sdf\volume\clean\clean\ep\clean
+//#define input2 "K:\\sdf\\volume\\clean\\clean\\ep\\clean\\"
+// roc计算GAC的FP.TP值用的
+// #define input1 "D:\\swfdata20140420res\\roc3041\\"
+//#define input2 "D:\\segdata\\people\\roc3041\\" //people data roc 3041
+//#define input3 "K:\\sdf\\volume\\clean\\clean\\ep\\clean\\roc3041\\"
+//#define  input3 "L:\\sdfdata2\\edt\\20140414skeleton\\"
+//#define input1 "D:\\swfdata20140420res\\auto\\edt\\"
+//#define input2 "K:\\sdf\\volume\\clean\\clean\\ep\\clean\\"
+//#define input3 "D:\\swfdata20140420res\\auto\\skeleton\\"
+/*
+35-44divide region dir
+#define input1 "L:\\sdfdata2\\edt\\35-44edt\\"
+#define input2 "K:\\sdf\\volume\\clean\\clean\\ep\\clean\\"
+#define input3 "K:\\skeleton\\35-44\\"
+*/
+//people divide region dir
+//#define input1 "D:\\segdata\\people\\thickness\\edt\\"
+#define input1 "L:\\sdfdata2\\inner\\"
+//#define input2 "K:\\sdf\\volume\\clean\\clean\\ep\\clean\\"
+#define input3 "D:\\segdata\\people\\skeleton\\"
+// people /people divide region dir
+#define  input2 "D:\\data\\clean\\polypseginputdata\\origin\\"
+using namespace cimg_library;
+using namespace std;
+//////////////////////////////////////////////////////////////////////////
+//获取指定目录下所有文件的文件名，不包括文件夹，在GetFileFromDir中使用
+//strDir: 输入，目录路径
+//vFileDirList： 输出，文件路径列表
+//返回：空
+//////////////////////////////////////////////////////////////////////////
+void GetFileNameFromDirv2(string strDir, vector<string>& vFileDirList)
+{
+#ifdef _WIN32
+	WIN32_FIND_DATAA ffd;
+	LARGE_INTEGER filesize;
+	string szDir;
+	//size_t length_of_arg;
+	HANDLE hFind = INVALID_HANDLE_VALUE;
+	DWORD dwError = 0;
+
+	szDir = strDir + "\\*";
+	hFind = FindFirstFileA(szDir.c_str(), &ffd);
+
+	if (INVALID_HANDLE_VALUE == hFind)
+	{
+		cout << "get file name error" << endl;
+		return;
+	}
+	do
+	{
+		if (!(ffd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
+		{
+			string filename = ffd.cFileName;//(const char*)
+			string filedir = strDir + "\\" + filename;
+			vFileDirList.push_back(filedir);
+		}
+	} while (FindNextFileA(hFind, &ffd) != 0);
+
+	dwError = GetLastError();
+	if (dwError != ERROR_NO_MORE_FILES)
+	{
+		cout << "FindFirstFile error" << endl;
+		return;
+	}
+	FindClose(hFind);
+#else
+	DIR *dir;
+	struct dirent *ptr;
+	dir = opendir(strDir.c_str());
+	while ((ptr = readdir(dir)) != NULL)
+	{
+		string path = strDir + string("/") + string(ptr->d_name);
+		vFileDirList.push_back(path);
+	}
+	closedir(dir);
+	sort(vFileDirList.begin(), vFileDirList.end());
+#endif
+}
 
 //#include <iostream>
 //#include <crtdbg.h> 
@@ -91,7 +193,7 @@ void testcolon(int argc,string dir)
 	strcat(outdir2,dirbody);
 	strcat(outdir2,outname2);
 	test.writeImageName(*initial,outdir2);
-	evaluate(dir,l,m,n);
+//	evaluate(dir,l,m,n);
 }
 
 void testsesmic()
@@ -168,11 +270,11 @@ void testsesmic()
 	test.writeMRI(*initial,"K:\\sdf\\geo\\data.raw");//F:\\PA1\\ST1\\SE1
 
 }
-void testhistgram()
-{
-	//HUandThickness();
-	directdivideregion();
-}
+//void testhistgram()
+//{
+//	//HUandThickness();
+//	directdivideregion();
+//}
 void rate(string dir)
 {
 	char *pt="single_well";
@@ -243,9 +345,9 @@ int main(int argc,char **argv)
 	vector<string> files2;
 	vector<string> filesthickness;
 	vector<string> fileseg;
-	GetFileNameFromDir(dir2,files2);
-	GetFileNameFromDir(dirthickness,filesthickness);
-	GetFileNameFromDir(dirseg, fileseg);
+	GetFileNameFromDirv2(dir2,files2);
+	GetFileNameFromDirv2(dirthickness,filesthickness);
+	GetFileNameFromDirv2(dirseg, fileseg);
 	//seedlistdata();
 	int cur = 1;
 	vector<string> ::iterator thicknessiter = filesthickness.begin() + cur-1;
@@ -283,7 +385,7 @@ int main(int argc,char **argv)
 	//threshold();
 	//rocway2();
 	//testcolontest();
-	
+	//
 	//testsesmic();
 
 	

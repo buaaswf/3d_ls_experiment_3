@@ -1,4 +1,5 @@
-
+#pragma once
+#define  input2 "D:\\data\\clean\\polypseginputdata\\origin\\"
 /************************************************************************/
 /* need to impl the distance transform                                  */
 /*********************************************************************/

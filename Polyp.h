@@ -2,10 +2,10 @@
 #include <vector>
 #include"ThreeDim_LevelSet.h"
 
-//#include "statistics.h"
+
 #define  input2 "D:\\data\\clean\\polypseginputdata\\origin\\"
 #define output "D:\\swfdata20140420res\\polyp\\"
-#define inputt "D:\\swfdata20140420res\\polyp\\thickness\\"
+#define inputt "E:\\swfres20140808\\polyp\\thickness\\"
 using namespace std;
 class Seed
 {
@@ -47,4 +47,3 @@ public:
 		void computePolyp(Raw *polyp,char* dir);
 
 };
-

@@ -1,3 +1,4 @@
+#pragma once
 #include "ThreeDim_LevelSet.h"
 void peppersalt(Raw *data,double percent);
 //one ball

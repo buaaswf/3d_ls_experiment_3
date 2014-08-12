@@ -1,3 +1,4 @@
+#pragma once
 #include "vol_math_Raw3D_Independt.h"
 #include "vol_math_RawImage.h"
 #include<iostream>

@@ -1,5 +1,4 @@
-#ifndef SWF_STATISTICS_H
-#define SWF_STATISTICS_H
+#pragma once
 
 #include "vol_math_LevelSet.h"
 #include <queue>
@@ -15,6 +14,7 @@
 #include <fstream>
 #include <vector>
 #include <string>
+#include<stack>
 #ifdef _WIN32
 #include <Windows.h>
 #include <strsafe.h>
@@ -58,7 +58,7 @@
 //#define input2 "K:\\sdf\\volume\\clean\\clean\\ep\\clean\\"
 #define input3 "D:\\segdata\\people\\skeleton\\"
 // people /people divide region dir
-#define  input2 "K:\\sdf\\volume\\clean\\clean\\polyp\\"
+#define  input2 "D:\\data\\clean\\polypseginputdata\\origin\\"
 using namespace cimg_library;
 using namespace std;
 //////////////////////////////////////////////////////////////////////////
@@ -512,7 +512,7 @@ void thincknessstdv2(string dir)
 				PIXTYPE  val = src->get(i,j,k);
 				float * p= &val;
 				unsigned char * bp= (unsigned char *)p;
-std:swap(bp[0],bp[3]);
+				std:swap(bp[0],bp[3]);
 				std::swap(bp[1],bp[2]);
 				//cout << val <<endl;
 				if (val > 0 && val <100 )
@@ -1050,4 +1050,146 @@ void directdivideregion()
 
 	
 }
-#endif
+Point* chekneghbor(Point *p, Raw *src)
+{
+	Point *res = new Point();
+	bool flag = true;
+	for (size_t l = p->x - 1; l <= p->x + 1 && flag; l++)
+	{
+		for (size_t m = p->y - 1; m <= p->y + 1 && flag; m++)
+		{
+			for (size_t n = p->z - 1; n <= p->z + 1 && flag; n++)
+			{
+				if (src->get(l, m, n) == 100)
+				{
+					res->x = l;
+					res->y = m;
+					res->z = n;
+					res->value = 200;
+					src->put(l, m, n, 200);
+					flag = false;
+
+				}
+
+
+
+			}
+
+		}
+	}
+	if (flag == true)
+	{
+		res->value = 0;
+
+	}
+	return  res;
+}
+void removeOutliersv2(Raw * origincolon, Raw *res)
+{
+	int first = 0;
+	size_t i = 0;
+	size_t j = 0;
+	size_t k = 0;
+	vector< vector<Point> > list(1000);
+	int num = 0;
+	while (i <= origincolon->getXsize() && j <= origincolon->getYsize() && k <= origincolon->getZsize())
+	{
+		bool flag = true;
+		//find the first point
+		for (i = 0; i < origincolon->getXsize() && flag; i++)
+		{
+			for (j = 0; j < origincolon->getYsize() && flag; j++)
+			{
+				for (k = 0; k < origincolon->getZsize() && flag; k++)
+				{
+					if (origincolon->get(i, j, k) == 100)
+
+					{
+						origincolon->put(i, j, k, 200);
+						flag = false;
+						//cout << origincolon->get(i, j, k) << endl;
+						//break;
+					}
+				}
+			}
+		}
+		if (flag == false)
+		{
+			std::stack<Point> path;
+			path.push(Point(i, j, k, 200));
+			//path.push(*chekneghbor(&Point(i, j, k, 100), origincolon));
+			while (!path.empty())
+			{
+				PIXTYPE temp = 1;
+				while (temp != 0)
+				{
+					Point *val = chekneghbor(&path.top(), origincolon);
+					temp = val->value;
+					if (temp != 0)
+					{
+						path.push(*val);
+						list[num].push_back(path.top());
+
+					}
+
+					//path.push(*val, origincolon));
+				}
+				path.pop();
+			}
+
+
+			cout << num++ << endl;
+
+
+		}
+		else break;
+
+	}
+	int maxlistnum = 0;
+	int num2maxnum = -1;
+	int max = -1;
+	for (size_t i = 0; i < res->getXsize(); i++)
+	{
+		for (size_t j = 0; j < res->getYsize(); j++)
+		{
+			for (size_t k = 0; k < res->getZsize(); k++)
+			{
+				res->put(i, j, k, 0);
+
+			}
+
+		}
+
+	}
+	for (size_t kk = 0; kk < num; kk++)
+	{
+
+
+
+		if (list[kk].size() > 46000)
+		{
+			num2maxnum = kk;
+			for (vector<Point>::iterator it = list[kk].begin(); it != list[kk].end(); ++it)
+			{
+
+				res->put(it->x, it->y, it->z, it->value);
+			}
+		}
+
+
+	}
+
+	cout << list[maxlistnum].size() << endl;
+	cout << list[num2maxnum].size() << endl;
+
+
+	//if (maxlistnum >= 0)
+	//{
+	//	for (vector<Point>::iterator it = list[maxlistnum].begin(); it != list[maxlistnum].end(); ++it)
+	//	{
+
+	//		res->put(it->x, it->y, it->z, it->value);
+	//	}
+
+	//}
+}
